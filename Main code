@@ -1,0 +1,156 @@
+/* Arduino example code for DHT11, DHT22/AM2302 and DHT21/AM2301 temperature and humidity sensors with I2C LCD. 
+
+// Include the libraries:
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+// Set DHT pin:
+#define DHTPIN 8
+#define Buzzer 13
+// Define SDA and SCL pin for LCD:
+#define SDAPin A4 // Data pin
+#define SCLPin A5 // Clock pin
+
+int smokeA0 = A0;
+// Your threshold value
+int sensorThres = 400;
+
+#define DHTTYPE DHT22   // DHT 22  (AM2302)
+
+// Initialize DHT sensor for normal 16mhz Arduino:
+DHT dht = DHT(DHTPIN, DHTTYPE);
+
+//define ultrasonic sensor pins 
+//back 
+#define trigPin1 7
+#define echoPin1 6
+//right
+#define trigPin2 3
+#define echoPin2 2
+//left
+#define trigPin3 4
+#define echoPin3 5
+
+long duration, distance, RightSensor,BackSensor,FrontSensor,LeftSensor;
+
+// Connect to LCD via I2C, default address 0x27 
+LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x27, 16, 2);                                                              //Change to (0x27,20,4) for 2004 LCD
+
+void setup() {
+  //define pinmodes for ultrasonic sensor
+pinMode(trigPin1, OUTPUT);
+pinMode(echoPin1, INPUT);
+pinMode(trigPin2, OUTPUT);
+pinMode(echoPin2, INPUT);
+pinMode(trigPin3, OUTPUT);
+pinMode(echoPin3, INPUT);
+//smoke pin
+pinMode(smokeA0, INPUT);
+ // Setup temp/hum sensor:
+  dht.begin();
+
+  // Initiate the LCD:
+  lcd.init();
+  lcd.backlight();
+}
+
+void loop() {
+
+  // Wait a few seconds between measurements:
+  delay(2000);
+
+  // Reading temperature or humidity takes about 250 milliseconds!
+  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+
+  // Read the humidity in %:
+  float h = dht.readHumidity();
+  // Read the temperature as Celsius:
+  float t = dht.readTemperature();
+  // Read the temperature as Fahrenheit:
+  float f = dht.readTemperature(true);
+
+  // Compute heat index in Fahrenheit (default):
+  float hif = dht.computeHeatIndex(f, h);
+  // Compute heat index in Celsius:
+  float hic = dht.computeHeatIndex(t, h, false);
+
+//put alert for high temp or humidity 
+if(t>35) // if temperature is greater then sound buzzer
+{
+  tone(Buzzer,1000,100);
+}
+else if(h>60)
+{
+   tone(Buzzer,2000,500); //humidity condition with different warning tone 
+  }
+else {
+  digitalWrite(Buzzer,LOW); // no tone 
+}
+
+  // Print the temperature and the humidity on the LCD:
+  lcd.setCursor(0, 0);
+  lcd.print("Temp: ");
+  lcd.print(t);
+  lcd.print(" " "\xDF" "C");
+  lcd.setCursor(0, 1);
+  lcd.print("Humid: ");
+  lcd.print(h);
+  lcd.print(" %");
+
+
+//sensor setup
+//back
+digitalWrite(trigPin1, LOW);
+delayMicroseconds(2);
+digitalWrite(trigPin1, HIGH);
+delayMicroseconds(10);
+digitalWrite(trigPin1, LOW);
+const unsigned long duration1 = pulseIn(echoPin1, HIGH);
+int distance1 = (duration1/2) / 29.1;
+
+//right
+digitalWrite(trigPin2, LOW);
+delayMicroseconds(2);
+digitalWrite(trigPin2, HIGH);
+delayMicroseconds(10);
+digitalWrite(trigPin2, LOW);
+const unsigned long duration2 = pulseIn(echoPin2, HIGH);
+int distance2 = (duration2/2) / 29.1;
+
+//left
+ digitalWrite(trigPin3, LOW);
+delayMicroseconds(2);
+digitalWrite(trigPin3, HIGH);
+delayMicroseconds(10);
+digitalWrite(trigPin3, LOW);
+const unsigned long duration3 = pulseIn(echoPin3, HIGH);
+int distance3 = (duration3/2) / 29.1;
+
+//if statement for the sensors 
+
+if((distance1=1 and distance1<=60) or (distance2>=1 and distance2<=60) or (distance3>=1 and distance3<=60))
+ {
+  tone(Buzzer,3000, 2000);
+ } 
+  else
+  {
+   digitalWrite(Buzzer,LOW);
+  }
+  //intialize pinmodes for smoke
+   
+   int analogSensor = analogRead(smokeA0);
+   // Checks if it has reached the threshold value
+  if (analogSensor > sensorThres)
+  {
+    tone(Buzzer, 100, 1000);
+   
+  }
+  else {
+    digitalWrite(Buzzer,LOW);
+  }
+}
+
+
+
