@@ -1,2 +1,3 @@
 # Sensor-Project
-This is code I used in a project involving multiple sensors working together and displayig information on an LCD screen 
+This is the arduino uno C++ code used in my project involving multiple sensors working together and displayig sensor information on an LCD screen to accurately inform and alert users working under dangerours conditions.
+Sensors include: Temperature-humidiy sensor, ultrasonic sensor and a gas sensor
